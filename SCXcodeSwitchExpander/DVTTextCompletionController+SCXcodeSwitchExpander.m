@@ -118,7 +118,7 @@
                 
                 if([switchStatementContents rangeOfString:child.displayName].location == NSNotFound)
                 {
-                    [replacementString appendString:[NSString stringWithFormat:@"\ncase %@:\n<#statement#>\nbreak;", child.displayName]];
+                    [replacementString appendString:[NSString stringWithFormat:@"\ncase %@:\n{\n<#statement#>\nbreak;\n}", child.displayName]];
                 }
             }
         
