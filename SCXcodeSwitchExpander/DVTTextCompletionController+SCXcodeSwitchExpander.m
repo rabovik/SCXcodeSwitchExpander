@@ -123,7 +123,7 @@
             }
         
             // Insert the generated items
-            [textView insertText:replacementString replacementRange:NSMakeRange(openingBracketRange.location + 1, 1)];
+            [textView insertText:replacementString replacementRange:NSMakeRange(openingBracketRange.location + 1, 0)];
             
             // Re-indent everything
             [textView _indentInsertedTextIfNecessaryAtRange:NSMakeRange(openingBracketRange.location + 1, replacementString.length)];
