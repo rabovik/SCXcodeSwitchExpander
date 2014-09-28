@@ -24,7 +24,7 @@
 
 @interface DVTTextCompletionListWindowController (SCXcodeSwitchExpander)
 
-- (void)tryExpandingSwitchStatement;
+- (BOOL)tryExpandingSwitchStatement;
 
 @end
 
@@ -42,7 +42,9 @@
 
 - (BOOL)scSwizzledAcceptCurrentCompletion
 {
-    [self.currentSession.listWindowController tryExpandingSwitchStatement];
+    if([self.currentSession.listWindowController tryExpandingSwitchStatement]) {
+        return YES;
+    }
     return [self scSwizzledAcceptCurrentCompletion];
 }
 
@@ -50,12 +52,12 @@
 
 @implementation DVTTextCompletionListWindowController (SCXcodeSwitchExpander)
 
-- (void)tryExpandingSwitchStatement
+- (BOOL)tryExpandingSwitchStatement
 {
     IDEIndex *index = [[SCXcodeSwitchExpander sharedSwitchExpander] index];
     
     if(index == nil) {
-        return;
+        return NO;
     }
     
     IDEIndexCompletionItem *item = [self _selectedCompletionItem];
@@ -72,19 +74,19 @@
             
             DVTSourceTextView *textView = (DVTSourceTextView *)self.session.textView;
             if(self.session.wordStartLocation == NSNotFound) {
-                return;
+                return NO;
             }
             
             // Fetch the previous new line
             NSRange newLineRange = [textView.string rangeOfString:@"\n" options:NSBackwardsSearch range:NSMakeRange(0, self.session.wordStartLocation)];
             if(newLineRange.location == NSNotFound) {
-                return;
+                return NO;
             }
             
             // See if the current line has a switch statement
             NSRange switchRange = [textView.string rangeOfString:@"\\s+switch\\s*\\\(" options:NSRegularExpressionSearch range:NSMakeRange(newLineRange.location, self.session.wordStartLocation - newLineRange.location)];
             if(switchRange.location == NSNotFound) {
-                return;
+                return NO;
             }
             
             // Insert the selected autocomplete item
@@ -93,13 +95,13 @@
             // Fetch the opening bracket for that switch statement
             NSRange openingBracketRange = [textView.string rangeOfString:@"{" options:0 range:NSMakeRange(self.session.wordStartLocation, textView.string.length - self.session.wordStartLocation)];
             if(openingBracketRange.location == NSNotFound) {
-                return;
+                return YES;
             }
             
             // Fetch the closing bracket for that switch statement
             NSUInteger closingBracketLocation = [self matchingBracketLocationForOpeningBracketLocation:openingBracketRange.location inString:self.session.textView.string];
             if(closingBracketLocation == NSNotFound) {
-                return;
+                return YES;
             }
             
             NSString *switchStatementContents = [self.session.textView.string substringWithRange:NSMakeRange(openingBracketRange.location, closingBracketLocation - openingBracketRange.location)];
@@ -121,6 +123,10 @@
                     [replacementString appendString:[NSString stringWithFormat:@"\ncase %@:\n{\n<#statements#>\nbreak;\n}", child.displayName]];
                 }
             }
+
+            if (0 == replacementString.length) {
+                return YES;
+            }
         
             // Insert the generated items
             [textView insertText:replacementString replacementRange:NSMakeRange(openingBracketRange.location + 1, 0)];
@@ -138,6 +144,7 @@
         
         break;
     }
+    return NO;
 }
 
 - (NSUInteger)matchingBracketLocationForOpeningBracketLocation:(NSUInteger)location inString:(NSString *)string
