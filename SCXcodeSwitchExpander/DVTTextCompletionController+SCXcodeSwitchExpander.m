@@ -118,7 +118,7 @@
                 
                 if([switchStatementContents rangeOfString:child.displayName].location == NSNotFound)
                 {
-                    [replacementString appendString:[NSString stringWithFormat:@"\ncase %@:\n{\n<#statement#>\nbreak;\n}", child.displayName]];
+                    [replacementString appendString:[NSString stringWithFormat:@"\ncase %@:\n{\n<#statements#>\nbreak;\n}", child.displayName]];
                 }
             }
         
@@ -127,6 +127,13 @@
             
             // Re-indent everything
             [textView _indentInsertedTextIfNecessaryAtRange:NSMakeRange(openingBracketRange.location + 1, replacementString.length)];
+
+            // Auto-select first dummy statement
+            NSRange firstDummyRange = [textView.string rangeOfString:@"<#statements#>" options:0 range:NSMakeRange(openingBracketRange.location, replacementString.length)];
+            if ( NSNotFound != firstDummyRange.location )
+            {
+                textView.selectedRange = firstDummyRange;
+            }
         }
         
         break;
